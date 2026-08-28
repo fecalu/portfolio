@@ -1,0 +1,25 @@
+name: Deploy Portfolio
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa o código do repositório
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # 2. Copia os arquivos para o servidor via SSH
+      - name: Copiar arquivos para o servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: u0_a253
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "index.html"
+          target: "~/portfolio/"

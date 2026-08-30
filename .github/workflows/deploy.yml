@@ -9,12 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Instala o cloudflared para usar o tunnel SSH
+      # 1. Instala o cloudflared
       - name: Instalar cloudflared
         run: |
-          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflared.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update -qq && sudo apt-get install -y cloudflared
+          curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
+          sudo dpkg -i cloudflared.deb
 
       # 2. Conecta no servidor via tunnel e faz git pull
       - name: Deploy via git pull
@@ -25,6 +24,7 @@ jobs:
           username: u0_a253
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           request_pty: true
+          proxy_command: cloudflared access ssh --hostname %h
           script: |
             cd ~/portfolio
             git pull origin main

@@ -15,16 +15,21 @@ jobs:
           curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cloudflared.deb
           sudo dpkg -i cloudflared.deb
 
-      # 2. Conecta no servidor via tunnel e faz git pull
+      # 2. Configura SSH com ProxyCommand para o tunnel
+      - name: Configurar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          cat >> ~/.ssh/config << 'EOF'
+          Host ssh.joaofelipecamposluna.com.br
+            User u0_a253
+            IdentityFile ~/.ssh/id_ed25519
+            ProxyCommand cloudflared access ssh --hostname %h
+            StrictHostKeyChecking no
+          EOF
+
+      # 3. Faz o deploy via git pull
       - name: Deploy via git pull
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: u0_a253
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          request_pty: true
-          proxy_command: cloudflared access ssh --hostname %h
-          script: |
-            cd ~/portfolio
-            git pull origin main
+        run: |
+          ssh ssh.joaofelipecamposluna.com.br "cd ~/portfolio && git pull origin main"

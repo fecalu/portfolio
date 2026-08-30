@@ -9,7 +9,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Conecta no servidor e faz git pull
+      # 1. Instala o cloudflared para usar o tunnel SSH
+      - name: Instalar cloudflared
+        run: |
+          curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflared.com/cloudflared any main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+          sudo apt-get update -qq && sudo apt-get install -y cloudflared
+
+      # 2. Conecta no servidor via tunnel e faz git pull
       - name: Deploy via git pull
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -17,6 +24,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: u0_a253
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          request_pty: true
           script: |
             cd ~/portfolio
             git pull origin main
